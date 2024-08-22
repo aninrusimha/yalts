@@ -32,7 +32,7 @@ def train():
 
     # Initialize the model, compile it, and wrap it in DDP
     # TODO: add mixed precision support
-    model = Transformer(args).to(device)
+    model = Transformer(args).to(device, dtype=torch.bfloat16)
 
     model = torch.compile(model)
 
@@ -58,7 +58,7 @@ def train():
 
     files = None
 
-    dataset = DummyDataset(files)
+    dataset = DummyDataset()
 
     train_sampler = DistributedSampler(dataset, shuffle=True)
 
@@ -74,7 +74,7 @@ def train():
 
     # TODO: calculate flops or tokens or seqs and create a tqdm bar
 
-    for inputs in tqdm.tqdm(train_loader):
+    for inputs in tqdm(train_loader):
         inputs = inputs.to(device)
         # why is the line below correct?
         labels = inputs.clone()[..., 1:].reshape(-1).contiguous()
