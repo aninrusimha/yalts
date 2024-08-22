@@ -125,29 +125,29 @@ def get_training_arguments():
 
     args = parser.parse_args()
 
-    assert (
-        args.save_interval_seqs % args.global_batch_seqs == 0
-    ), "save interval must be divisible by global batch size"
-    assert (
-        args.log_interval_seqs % args.global_batch_seqs == 0
-    ), "log interval must be divisible by global batch size"
+    # assert (
+    #     args.save_interval_seqs % args.global_batch_seqs == 0
+    # ), "save interval must be divisible by global batch size"
+    # assert (
+    #     args.log_interval_seqs % args.global_batch_seqs == 0
+    # ), "log interval must be divisible by global batch size"
 
-    # Attention Argument handling
-    if args.d_head is None:
-        args.d_head = args.d_model // args.n_heads
-    if args.n_q_heads is None:
-        args.n_q_heads = args.n_heads
-    if args.n_kv_heads is None:
-        args.n_kv_heads = args.n_heads
+    # # Attention Argument handling
+    # if args.d_head is None:
+    #     args.d_head = args.d_model // args.n_heads
+    # if args.n_q_heads is None:
+    #     args.n_q_heads = args.n_heads
+    # if args.n_kv_heads is None:
+    #     args.n_kv_heads = args.n_heads
 
     if torch.distributed.get_rank() == 0:
         if not os.path.isdir(args.output_folder):
             print("making directory", args.output_folder)
             os.makedirs(args.output_folder)
-        else:
-            assert (
-                args.resume or args.restart
-            ), "continuing an existing folder without specifying resume or restart. Are you sure?"
+        # else:
+        #     assert (
+        #         args.resume or args.restart
+        #     ), "continuing an existing folder without specifying resume or restart. Are you sure?"
 
     return args
 
