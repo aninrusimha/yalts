@@ -2,10 +2,6 @@ import torch
 from torch import nn
 
 
-class RoPEPositionFreqs(nn.Module):
-    pass
-
-
 class AttentionModule(nn.Module):
     pass
 
