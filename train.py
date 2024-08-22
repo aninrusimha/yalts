@@ -13,7 +13,7 @@ from tqdm import tqdm
 from yalts.arguments import get_training_arguments
 from yalts.utils import pretty_tokens_str, get_num_params, print_rank_0
 from yalts.model import Transformer
-from yalts.data import MemMapDataset
+from yalts.data import DummyDataset
 
 
 def train():
@@ -38,18 +38,27 @@ def train():
 
     # TODO: add loss, optimizer, and LR schedule
 
-    loss_fn = None
+    loss_fn = nn.CrossEntropyLoss()
 
-    optimizer = None
+    optimizer = optim.AdamW(
+        model.parameters(),
+        lr=args.learning_rate,
+        weight_decay=args.weight_decay,
+        betas=(args.beta1, args.beta2),
+    )
 
     # for the scheduler, add warmup and cosine or sqrt LR decay
-    scheduler = None
+    global_steps = args.num_tokens // args.global_batch_tokens
+    cos_scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, global_steps)
+    warmup_scheduler = optim.lr_scheduler.LambdaLR(
+        optimizer, lambda step: min(1, step / (args.warmup_ratio * global_steps))
+    )
 
     # TODO: create the Dataset
 
     files = None
 
-    dataset = MemMapDataset(files)
+    dataset = DummyDataset(files)
 
     train_sampler = DistributedSampler(dataset, shuffle=True)
 
@@ -65,7 +74,7 @@ def train():
 
     # TODO: calculate flops or tokens or seqs and create a tqdm bar
 
-    for inputs in train_loader:
+    for inputs in tqdm.tqdm(train_loader):
         inputs = inputs.to(device)
         # why is the line below correct?
         labels = inputs.clone()[..., 1:].reshape(-1).contiguous()
@@ -76,10 +85,15 @@ def train():
         loss = loss_fn(outputs, labels)
         loss.backward()
         optimizer.step()
-        # scheduler.step()
+        cos_scheduler.step()
+        warmup_scheduler.step()
 
         # TODO: add logging and checkpointing
 
     torch.distributed.destroy_process_group()
 
     # TODO: save the model
+
+
+if __name__ == "__main__":
+    train()
