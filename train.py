@@ -49,7 +49,8 @@ def train():
 
     files = None
 
-    dataset = MemMapDataset(files)
+    # dataset = MemMapDataset(files)
+    dataset = DummyDataset()
 
     train_sampler = DistributedSampler(dataset, shuffle=True)
 
