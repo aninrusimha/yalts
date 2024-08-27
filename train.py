@@ -35,6 +35,7 @@ def train():
     model = Transformer(args).to(device, dtype=torch.bfloat16)
 
     model = torch.compile(model)
+    model = DDP(model)
 
     # TODO: add loss, optimizer, and LR schedule
 
@@ -45,6 +46,7 @@ def train():
         lr=args.learning_rate,
         weight_decay=args.weight_decay,
         betas=(args.beta1, args.beta2),
+        fused=True,
     )
 
     # for the scheduler, add warmup and cosine or sqrt LR decay
@@ -59,7 +61,9 @@ def train():
 
     files = None
 
-    train_dataset = MemMapBinaryDataset(args.dataset_path + "/train.bin")
+    train_dataset = MemMapBinaryDataset(
+        args.dataset_path + "/train.bin",
+    )
     val_dataset = MemMapBinaryDataset(args.dataset_path + "/val.bin")
 
     train_sampler = DistributedSampler(train_dataset, shuffle=False)
@@ -68,7 +72,8 @@ def train():
         train_dataset,
         sampler=train_sampler,
         batch_size=args.micro_batch_seqs,
-        num_workers=1,
+        num_workers=2,
+        pin_memory=True,
         shuffle=False,
     )
 
