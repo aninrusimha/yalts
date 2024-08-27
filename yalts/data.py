@@ -24,5 +24,4 @@ class MemMapBinaryDataset(Dataset):
         return self.file.shape[0]
 
     def __getitem__(self, index):
-        # in reality, we probably won't have time to download data and preprocess it
         return torch.tensor(self.file[index], dtype=torch.long)

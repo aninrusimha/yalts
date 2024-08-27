@@ -139,7 +139,7 @@ def get_training_arguments():
         args.n_q_heads = args.n_heads
     if args.n_kv_heads is None:
         args.n_kv_heads = args.n_heads
-
+    assert args.global_batch_tokens % args.micro_batch_tokens == 0
     if torch.distributed.get_rank() == 0:
         if not os.path.isdir(args.output_folder):
             print("making directory", args.output_folder)
