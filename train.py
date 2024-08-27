@@ -13,7 +13,7 @@ from tqdm import tqdm
 from yalts.arguments import get_training_arguments
 from yalts.utils import pretty_tokens_str, get_num_params, print_rank_0
 from yalts.model import Transformer
-from yalts.data import DummyDataset
+from yalts.data import MemMapBinaryDataset
 
 
 def train():
@@ -49,6 +49,7 @@ def train():
 
     # for the scheduler, add warmup and cosine or sqrt LR decay
     global_steps = args.num_tokens // args.global_batch_tokens
+    # we usually cosine to be max(.1 *lr, cos)
     cos_scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, global_steps)
     warmup_scheduler = optim.lr_scheduler.LambdaLR(
         optimizer, lambda step: min(1, step / (args.warmup_ratio * global_steps))
@@ -58,12 +59,13 @@ def train():
 
     files = None
 
-    dataset = DummyDataset()
+    train_dataset = MemMapBinaryDataset(args.dataset_path + "/train.bin")
+    val_dataset = MemMapBinaryDataset(args.dataset_path + "/val.bin")
 
-    train_sampler = DistributedSampler(dataset, shuffle=True)
+    train_sampler = DistributedSampler(train_dataset, shuffle=False)
 
     train_loader = DataLoader(
-        dataset,
+        train_dataset,
         sampler=train_sampler,
         batch_size=args.micro_batch_seqs,
         num_workers=1,

@@ -16,13 +16,13 @@ class DummyDataset(Dataset):
 
 
 class MemMapBinaryDataset(Dataset):
-    def __init__(self) -> None:
+    def __init__(self, file) -> None:
         super().__init__()
-        self.ones = torch.ones((2048), dtype=torch.long)
+        self.file = np.memmap(file, dtype=np.uint16, mode="r").reshape(-1, 2048)
 
     def __len__(self):
-        return int(1e8)
+        return self.file.shape[0]
 
     def __getitem__(self, index):
         # in reality, we probably won't have time to download data and preprocess it
-        return self.ones
+        return torch.tensor(self.file[index], dtype=torch.long)
